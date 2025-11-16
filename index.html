@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Candidate Registration Form</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- React + ReactDOM + Babel (for JSX in browser) -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- App code (JSX) -->
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    function App() {
+      const [form, setForm] = useState({
+        name: "",
+        email: "",
+        phone: "",
+        position: "",
+        experience: "",
+        status: "Applied",
+        resume: ""
+      });
+      const [list, setList] = useState([]);
+
+      useEffect(() => {
+        const saved = localStorage.getItem("candidates");
+        if (saved) setList(JSON.parse(saved));
+      }, []);
+
+      useEffect(() => {
+        localStorage.setItem("candidates", JSON.stringify(list));
+      }, [list]);
+
+      function handleChange(e) {
+        setForm({ ...form, [e.target.name]: e.target.value });
+      }
+
+      function handleSubmit(e) {
+        e.preventDefault();
+        if (!form.name || !form.email || !form.position) {
+          alert("Please fill Name, Email and Position.");
+          return;
+        }
+        const newItem = { ...form, id: Date.now() };
+        setList([newItem, ...list]);
+        setForm({
+          name: "",
+          email: "",
+          phone: "",
+          position: "",
+          experience: "",
+          status: "Applied",
+          resume: ""
+        });
+      }
+
+      function removeItem(id) {
+        setList(list.filter(i => i.id !== id));
+      }
+
+      return (
+        <div className="container">
+          <h1>Candidate Registration Form</h1>
+          <form onSubmit={handleSubmit} className="card">
+            <label>Name *</label>
+            <input name="name" value={form.name} onChange={handleChange} placeholder="Full name" />
+
+            <label>Email *</label>
+            <input name="email" value={form.email} onChange={handleChange} placeholder="example@mail.com" />
+
+            <label>Phone</label>
+            <input name="phone" value={form.phone} onChange={handleChange} placeholder="Optional" />
+
+            <label>Position Applied *</label>
+            <input name="position" value={form.position} onChange={handleChange} placeholder="e.g., HR Assistant" />
+
+            <label>Experience (years)</label>
+            <input name="experience" value={form.experience} onChange={handleChange} placeholder="0" />
+
+            <label>Status</label>
+            <select name="status" value={form.status} onChange={handleChange}>
+              <option>Applied</option>
+              <option>Screening</option>
+              <option>Interview</option>
+              <option>Hired</option>
+              <option>Rejected</option>
+            </select>
+
+            <label>Resume link</label>
+            <input name="resume" value={form.resume} onChange={handleChange} placeholder="Google Drive / Dropbox link (optional)" />
+
+            <div className="actions">
+              <button type="submit">Add Candidate</button>
+              <button type="button" onClick={() => { setList([]); localStorage.removeItem("candidates"); }}>Clear All</button>
+            </div>
+          </form>
+
+          <h2>Saved Candidates ({list.length})</h2>
+          <div className="list">
+            {list.length === 0 && <p className="muted">No candidates yet — add one above.</p>}
+            {list.map(item => (
+              <div key={item.id} className="item">
+                <div className="meta">
+                  <strong>{item.name}</strong>
+                  <span>{item.position} • {item.status}</span>
+                </div>
+                <div className="info">
+                  <small>Email: {item.email}</small>
+                  <small>Phone: {item.phone || "—"}</small>
+                  <small>Exp: {item.experience || "0"} yrs</small>
+                  {item.resume && <small><a href={item.resume} target="_blank" rel="noreferrer">Resume</a></small>}
+                </div>
+                <button className="remove" onClick={() => removeItem(item.id)}>Remove</button>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>
